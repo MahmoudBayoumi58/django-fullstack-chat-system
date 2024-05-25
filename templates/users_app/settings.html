@@ -1,0 +1,287 @@
+{% extends 'base/main.html' %}
+
+{% block title %}
+    Settings
+{% endblock %}
+
+{% block Sidebar %}
+    <!-- Settings Tab -->
+    <div class="d-flex flex-column h-100">
+        <!-- Tab Header -->
+        <div class="tab-header d-flex align-items-center border-bottom">
+            <ul class="d-flex justify-content-between align-items-center list-unstyled w-100 mx-4 mb-0">
+                <!-- Title -->
+                <li>
+                    <h3 class="mb-0">Settings</h3>
+                </li>
+                <!-- Title -->
+
+                <!-- Buttons -->
+                <li>
+                    <ul class="list-inline">
+                        <!-- Menu Button -->
+                        <li class="list-inline-item">
+                            <button type="button" class="navigation-toggle btn btn-secondary btn-icon d-xl-none">
+                                <i class="ri-menu-line"></i>
+                            </button>
+                        </li>
+                        <!-- Menu Button -->
+                    </ul>
+                </li>
+                <!-- Buttons -->
+            </ul>
+        </div>
+        <!-- Tab Header -->
+
+        <!-- Search Input -->
+        <div class="m-4">
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg form-control-solid" placeholder="Search settings" aria-label="Search settings" aria-describedby="search-settings-button">
+                <button class="btn btn-secondary btn-lg" type="button" id="search-settings-button">
+                    <i class="ri-search-line"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Search Input -->
+
+        <!-- Tab Content -->
+        <div class="hide-scrollbar h-100">
+            <div class="m-4 mt-0">
+                <!-- Profile -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center gx-4">
+                            <!-- Avatar -->
+                            <div class="col-auto">
+                                <div class="avatar avatar-online">
+                                    <span class="avatar-label bg-soft-success text-success">{{request.user.get_short_name}}</span>
+                                </div>
+                            </div>
+                            <!-- Avatar -->
+
+                            <!-- Content -->
+                            <div class="col">
+                                <h5 class="mb-1">{{request.user.get_full_name}}</h5>
+                                <p class="text-muted mb-0">{{request.user.email}}</p>
+                            </div>
+                            <!-- Content -->
+
+                            <!-- Button -->
+                            <a href="{% url 'logout' %}" class="btn btn-sm btn-icon btn-base">
+                                <button class="btn btn-sm btn-icon btn-base">
+                                    <i class="ri-logout-box-line"></i>
+                                </button>
+                            </a>
+                            <!-- Button -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Profile -->
+
+                <!-- Account -->
+                <div class="mb-3">
+                    <!-- Title -->
+                    <div class="d-flex align-items-center mx-4 mb-3">
+                        <small class="text-muted me-auto">Account</small>
+                    </div>
+                    <!-- Title -->
+
+                    <!-- Accordion -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="accordion accordion-flush" id="accordion-account-settings">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="account-heading-1">
+                                        <div class="accordion-button collapsed p-0 pb-4" role="button" data-bs-toggle="collapse" data-bs-target="#account-collapse-1" aria-expanded="false" aria-controls="account-collapse-1">
+                                            <div>
+                                                <h5 class="mb-1">Account settings</h5>
+                                                <p class="text-muted mb-0">Update account settings</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="account-collapse-1" class="accordion-collapse collapse {% if form_account %}show{%endif%}" aria-labelledby="account-heading-1">
+                                        <form method="post" id="account_form" action="{% url 'update_user_info' %}">
+                                            {% csrf_token %}
+                                            {% if form_account %}
+                                                {% include 'base/messages.html' %}
+                                            {% endif %}
+                                            <div class="accordion-body p-0 pb-4">
+                                                <!-- FirstName Input -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="text" value="{{request.user.first_name}}" name="first_name" class="form-control form-control-lg form-control-solid" placeholder="FirstName" aria-label="Name">
+                                                    </div>
+                                                </div>
+                                                <!-- FirstName Input -->
+
+                                                <!-- LastName Input -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="text" value="{{request.user.last_name}}" name="last_name" class="form-control form-control-lg form-control-solid" placeholder="LastName" aria-label="Name">
+                                                    </div>
+                                                </div>
+                                                <!-- LastName Input -->
+
+                                                <!-- Email Input -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="text" value="{{request.user.email}}" class="form-control form-control-lg form-control-solid" placeholder="Email" aria-label="Email">
+                                                    </div>
+                                                </div>
+                                                <!-- Email Input -->
+
+                                                <!-- Phone Input -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="text" value="{% if request.user.phone %}{{request.user.phone}}{% endif %}" name="phone" class="form-control form-control-lg form-control-solid" placeholder="Phone" aria-label="Phone">
+                                                    </div>
+                                                </div>
+                                                <!-- Phone Input -->
+
+                                                <!-- About Input -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <textarea name="bio" class="form-control form-control-lg form-control-solid" placeholder="About text" rows="3">
+                                                            {% if request.user.bio %}
+                                                                {{request.user.bio}}
+                                                            {% endif %}
+                                                        </textarea>
+                                                    </div>
+                                                </div>
+                                                <!-- About Input -->
+
+                                                <!-- Button -->
+                                                <button type="submit" class="btn btn-lg btn-primary w-100">Save</button>
+                                                <!-- Button -->
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Accordion -->
+                </div>
+                <!-- Account -->
+
+                <!-- Security -->
+                <div class="mb-3">
+                    <!-- Title -->
+                    <div class="d-flex align-items-center mx-4 mb-3">
+                        <small class="text-muted me-auto">Security</small>
+                    </div>
+                    <!-- Title -->
+
+                    <!-- Accordion -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="accordion accordion-flush" id="accordion-security-settings">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="security-heading-1">
+                                        <div class="accordion-button collapsed p-0 pb-4" role="button" data-bs-toggle="collapse" data-bs-target="#security-collapse-1" aria-expanded="false" aria-controls="security-collapse-1">
+                                            <div>
+                                                <h5 class="mb-1">Password settings</h5>
+                                                <p class="text-muted mb-0">Manage your password</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="security-collapse-1" class="accordion-collapse collapse {% if form_pass %}show{%endif%}" aria-labelledby="security-heading-1">
+                                        <form method="post" id="password_form" action="{% url 'change_password' %}">
+                                            {% csrf_token %}
+                                            {% if form_pass %}
+                                                {% include 'base/messages.html' %}
+                                            {% endif %}
+                                            <div class="accordion-body p-0 pb-4">
+                                                <!-- Current password -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="password" id="old_password" name="old_password" class="form-control form-control-lg form-control-solid" placeholder="Current password" aria-label="Current password">
+                                                    </div>
+                                                    <div id="old_password_validation" style="transition: .3s;" class="text-danger"></div>
+                                                </div>
+                                                <!-- Current password -->
+
+                                                <!-- New password -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="password" id="password" name="new_password" class="form-control form-control-lg form-control-solid" placeholder="New password" aria-label="New password">
+                                                    </div>
+                                                    <div id="password1_validation" style="transition: .3s;" class="text-danger"></div>
+                                                </div>
+                                                <!-- New password -->
+
+                                                <!-- Confirm password -->
+                                                <div class="mb-4">
+                                                    <div class="input-group">
+                                                        <input type="password" id="confirm_password" class="form-control form-control-lg form-control-solid" placeholder="Confirm password" aria-label="Confirm password">
+                                                    </div>
+                                                    <div id="password2_validation" style="transition: .3s;" class="text-danger"></div>
+                                                </div>
+                                                <!-- Confirm password -->
+
+                                                <!-- Button -->
+                                                <button type="submit" class="btn btn-lg btn-primary w-100">Save</button>
+                                                <!-- Button -->
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Accordion -->
+                </div>
+                <!-- Security -->
+            </div>
+        </div>
+        <!-- Tab Content -->
+    </div>
+    <!-- Settings Tab -->
+
+    <script>
+        document.getElementById('password_form').addEventListener('submit', function(event) {
+            // Clear previous error messages
+            document.getElementById('old_password_validation').innerHTML = '';
+            document.getElementById('password1_validation').innerHTML = '';
+            document.getElementById('password2_validation').innerHTML = '';
+
+            document.getElementById('old_password').classList.remove('border-danger');
+            document.getElementById('password').classList.remove('border-danger');
+            document.getElementById('confirm_password').classList.remove('border-danger');
+
+            // Get form values
+            var old_password = document.getElementById('old_password').value;
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirm_password').value;
+
+            // Validate old password
+            if (old_password.trim() === ''){
+                document.getElementById('old_password_validation').innerHTML = 'current password is required !';
+                document.getElementById('old_password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            // Validate new password
+            if (password.trim() === '' || confirmPassword.trim() === ''){
+                document.getElementById('password1_validation').innerHTML = 'new password is required !';
+                document.getElementById('password2_validation').innerHTML = 'new password is required !';
+                document.getElementById('password').classList.add('border-danger')
+                document.getElementById('confirm_password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            if (password.trim() != confirmPassword.trim()){
+                document.getElementById('password1_validation').innerHTML = 'passwords not matches !';
+                document.getElementById('password').classList.add('border-danger')
+                document.getElementById('confirm_password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+{% block modal %}
+{% endblock %}

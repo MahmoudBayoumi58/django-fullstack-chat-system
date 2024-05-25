@@ -1,0 +1,129 @@
+{% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles-light.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles-dark.min.css' %}" media="(prefers-color-scheme: dark)">
+</head>
+
+<body>
+    <!-- Layout -->
+    <div class="layout">
+        <!-- Navigation -->
+        <div class="navigation navbar border-end h-100 py-6">
+            <!-- Logo -->
+            <a class="logo d-none d-xl-block mb-6" href="#">
+                <img src="{% static 'img/logo.png' %}" alt="">
+            </a>
+            <!-- Logo -->
+
+            <!-- Nav -->
+            <ul class="nav nav-pills" role="tablist">
+                <!-- Create chat -->
+                <li class="nav-item mt-xl-auto mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'suggested_users' %}active{% endif %}" href="{% url 'suggested_users' %}" title="Create chat">
+                        <i class="ri-search-line"></i>
+                    </a>
+                </li>
+                <!-- Create chat -->
+
+                <!-- Friends -->
+                <li class="nav-item mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'chatted_users' %}active{% endif %}" href="{% url 'chatted_users' %}" title="Friends">
+                        <i class="ri-group-line"></i>
+                    </a>
+                </li>
+                <!-- Friends -->
+
+                <!-- Chats -->
+                <li class="nav-item mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name in 'chat_home chat_view' %}active{% endif %}" href="{% url 'chat_home' %}" title="Chats">
+                        <i class="ri-chat-3-line"></i>
+                    </a>
+                </li>
+                <!-- Chats -->
+
+                <!-- Settings -->
+                <li class="nav-item mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}" href="{% url 'user_settings' %}" title="Settings">
+                        <i class="ri-settings-4-line"></i>
+                    </a>
+                </li>
+                <!-- Settings -->
+
+                <!-- Notifications -->
+                <li class="nav-item mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name == '' %}active{% endif %}" href="#" title="Notifications">
+                        <i class="ri-notification-3-line"></i>
+                    </a>
+                </li>
+                <!-- Notifications -->
+
+
+                <!-- Demo -->
+                <li class="nav-item mb-5" role="presentation">
+                    <a class="nav-link {% if request.resolver_match.url_name == '' %}active{% endif %}" href="#" title="Demo">
+                        <i class="ri-stack-line"></i>
+                    </a>
+                </li>
+                <!-- Demo -->
+
+                <!-- Avatar -->
+                <li class="nav-item" role="presentation">
+                    <a class="text-decoration-none" href="#" data-bs-toggle="modal" data-bs-target="#modal-account" title="Account">
+                        <div class="avatar avatar-online avatar-sm">
+                            <span class="avatar-label bg-soft-success text-success fs-6">{{ request.user.get_short_name }}</span>
+                        </div>
+                    </a>
+                </li>
+                <!-- Avatar -->
+            </ul>
+            <!-- Nav -->
+        </div>
+        <!-- Navigation -->
+
+        <!-- Sidebar -->
+        <div class="sidebar border-end overflow-hidden h-100">
+            <div class="tab-content h-100">
+                {% block Sidebar %}
+                {% endblock %}
+            </div>
+        </div>
+        <!-- Sidebar -->
+
+        <!-- Main Content -->
+        <div class="main main-visible overflow-hidden h-100">
+            <div class="chat d-flex flex-row h-100">
+            <!-- Chat -->
+                <div class="chat-body h-100 w-100 d-flex flex-column">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+        <!-- Main Content -->
+    </div>
+    <!-- Layout -->
+
+    {% block modal %}
+    {% endblock %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/app.min.js' %}"></script>
+    <script src="{% static 'js/moment.min.js' %}"></script>
+    <!-- Scripts -->
+</body>
+
+</html>

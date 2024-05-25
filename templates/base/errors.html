@@ -1,0 +1,17 @@
+{% if form.non_field_errors %}
+    <ul>
+        {% for error in form.non_field_errors %}
+            <li class="text-danger">{{ error }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if form.errors %}
+    <ul>
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li class="text-danger">{{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+{% endif %}

@@ -1,0 +1,151 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Sign up
+{% endblock %}
+
+{% block heading_title %}
+    Sign up
+{% endblock %}
+
+{% block heading_text %}
+    Create new account
+{% endblock %}
+
+{% block content %}
+    <!-- Form -->
+    <form class="mb-4" id="register_form" method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+        {% include 'base/errors.html' %}
+        {% include 'base/messages.html' %}
+
+        <!-- Email -->
+        <div class="mb-4">
+            <label for="email" class="mb-2">Email</label>
+            <input type="email" name="email" id="email" class="form-control form-control-solid form-control-lg" placeholder="Enter your email">
+            <div id="email_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Email -->
+
+        <!-- Firstname -->
+        <div class="mb-4">
+            <label class="mb-2" for="first_name">FirstName</label>
+            <input type="text" name="first_name" id="first_name" class="form-control form-control-solid form-control-lg" placeholder="FirstName">
+            <div id="first_name_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Firstname -->
+
+        <!-- Lastname -->
+        <div class="mb-4">
+            <label class="mb-2" for="last_name">LastName</label>
+            <input type="text" name="last_name" id="last_name" class="form-control form-control-solid form-control-lg" placeholder="LastName">
+            <div id="last_name_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Lastname -->
+
+        <!-- Password -->
+        <div class="mb-4">
+            <label for="password" class="mb-2">Password</label>
+            <input type="password" name="password" id="password" class="form-control form-control-solid form-control-lg" placeholder="Enter your password">
+            <div id="password1_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Password -->
+
+        <!-- Confirm Password -->
+        <div class="mb-4">
+            <label for="confirm_password" class="mb-2">Confirm Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" class="form-control form-control-solid form-control-lg" placeholder="Confirm password">
+            <div id="password2_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Confirm Password -->
+
+        <!-- Button -->
+        <div class="d-grid">
+            <button class="btn btn-lg btn-primary" type="submit">Sign up</button>
+        </div>
+        <!-- Button -->
+    </form>
+    <!-- Form -->
+
+    <!-- Text -->
+    <p class="text-center mb-1">
+        By registering, you agree to our <a href="#">Terms & Privacy.</a>
+    </p>
+    <!-- Text -->
+
+    <!-- Text -->
+    <p class="text-center mb-0">
+        Already have an account?
+        <a href="{% url 'login' %}">Sign in.</a>
+    </p>
+    <!-- Text -->
+
+    <script>
+        document.getElementById('register_form').addEventListener('submit', function(event) {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+            // Clear previous error messages
+            document.getElementById('first_name_validation').innerHTML = '';
+            document.getElementById('last_name_validation').innerHTML = '';
+            document.getElementById('email_validation').innerHTML = '';
+            document.getElementById('password1_validation').innerHTML = '';
+            document.getElementById('password2_validation').innerHTML = '';
+
+            document.getElementById('first_name').classList.remove('border-danger');
+            document.getElementById('last_name').classList.remove('border-danger');
+            document.getElementById('email').classList.remove('border-danger');
+            document.getElementById('password').classList.remove('border-danger');
+            document.getElementById('confirm_password').classList.remove('border-danger');
+
+            // Get form values
+            var Firstname = document.getElementById('first_name').value;
+            var Lastname = document.getElementById('last_name').value;
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirm_password').value;
+
+            // Validate Firstname
+            if (Firstname.trim() === ''){
+                document.getElementById('first_name_validation').innerHTML = 'Firstname is required !';
+                document.getElementById('first_name').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            // Validate Lastname
+            if (Lastname.trim() === ''){
+                document.getElementById('last_name_validation').innerHTML = 'Lastname is required !';
+                document.getElementById('last_name').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            // Validate email
+            if (email.trim() === ''){
+                document.getElementById('email_validation').innerHTML = 'email is required !';
+                document.getElementById('email').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            if (! emailRegex.test(email.trim())){
+                document.getElementById('email_validation').innerHTML = 'email must use format example@example.com';
+                document.getElementById('email').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            // Validate password
+            if (password.trim() === '' || confirmPassword.trim() === ''){
+                document.getElementById('password1_validation').innerHTML = 'password is required !';
+                document.getElementById('password2_validation').innerHTML = 'password is required !';
+                document.getElementById('password').classList.add('border-danger')
+                document.getElementById('confirm_password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            if (password.trim() != confirmPassword.trim()){
+                document.getElementById('password1_validation').innerHTML = 'passwords not matches !';
+                document.getElementById('password').classList.add('border-danger')
+                document.getElementById('confirm_password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+        });
+    </script>
+{% endblock %}

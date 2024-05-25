@@ -1,0 +1,121 @@
+{% extends 'base/main.html' %}
+
+{% block title %}
+    Chat Home
+{% endblock %}
+
+{% block Sidebar %}
+    <!-- Friends Tab -->
+    <div class="d-flex flex-column h-100">
+            <!-- Tab Header -->
+            <div class="tab-header d-flex align-items-center border-bottom">
+                <ul class="d-flex justify-content-between align-items-center list-unstyled w-100 mx-4 mb-0">
+                    <!-- Title -->
+                    <li>
+                        <h3 class="mb-0">Chats</h3>
+                    </li>
+                    <!-- Title -->
+
+                    <!-- Buttons -->
+                    <li>
+                        <ul class="list-inline">
+                            <!-- Menu Button -->
+                            <li class="list-inline-item">
+                                <button type="button" class="navigation-toggle btn btn-secondary btn-icon d-xl-none">
+                                    <i class="ri-menu-line"></i>
+                                </button>
+                            </li>
+                            <!-- Menu Button -->
+                        </ul>
+                    </li>
+                    <!-- Buttons -->
+                </ul>
+            </div>
+            <!-- Tab Header -->
+
+            <!-- Search Input -->
+            <div class="m-4">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg form-control-solid" placeholder="Search friends" aria-label="Search friends" aria-describedby="search-friends-button">
+                    <button class="btn btn-secondary btn-lg" type="button" id="search-friends-button"><i class="ri-search-line"></i></button>
+                </div>
+            </div>
+            <!-- Search Input -->
+
+            <!-- Tab Content -->
+            <div class="hide-scrollbar h-100">
+                <div class="m-4">
+                    <!-- Contact List -->
+                    <div>
+                        <!--  Chats List -->
+                        {% for chat in chats %}
+                            {% for user in chat.participants.all %}
+                                {% if user != request.user %}
+                                    <ul class="list-unstyled">
+                                        <!-- Chat Link -->
+                                        <li class="card contact-item">
+                                            <a href="{% url 'chat_view' chat.uuid %}" class="contact-link"></a>
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    {% if user.is_online %}
+                                                        <div class="avatar avatar-online me-4">
+                                                        <span class="avatar-label bg-soft-primary text-primary">{{user.get_short_name}}</span>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <h5 class="text-truncate mb-0 me-auto">{{user.get_full_name}}</h5>
+                                                            </div>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="line-clamp me-auto">
+                                                                    {% if chat.last_msg %}
+                                                                        {{ chat.last_msg }}
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="avatar avatar-away me-4">
+                                                            <span class="avatar-label">{{user.get_short_name}}</span>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <h5 class="text-truncate mb-0 me-auto">{{user.get_full_name}}</h5>
+                                                            </div>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="line-clamp me-auto">
+                                                                    {% if chat.last_msg %}
+                                                                        {{ chat.last_msg }}
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <!-- Chat Link -->
+                                    </ul>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                        <!--  Chats List -->
+                    </div>
+                    <!-- Contact List -->
+                </div>
+            </div>
+            <!-- Tab Content -->
+
+            <!-- Invite Footer -->
+            <div class="invite-footer border-top p-4">
+                <button class="btn btn-lg btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modal-invite">Invite Friends</button>
+            </div>
+            <!-- Invite Footer -->
+        </div>
+    <!-- Friends Tab -->
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+{% block modal %}
+{% endblock %}

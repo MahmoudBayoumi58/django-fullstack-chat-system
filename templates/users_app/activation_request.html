@@ -1,0 +1,69 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Activation Request
+{% endblock %}
+
+{% block heading_title %}
+    Activation Request
+{% endblock %}
+
+{% block heading_text %}
+    Activate your account!
+{% endblock %}
+
+{% block content %}
+    <!-- Form -->
+    <form class="mb-4" id="activation_form" method="post" action="{% url 'send_activation_view' %}">
+        {% csrf_token %}
+        {% include 'base/messages.html' %}
+
+        <!-- Alert -->
+        <div class="mb-4">
+            <div class="alert alert-primary text-center">
+                Enter your email and receive further instructions
+            </div>
+        </div>
+        <!-- Alert -->
+
+        <!-- Email -->
+        <div class="mb-4">
+            <label for="email" class="mb-2">Email</label>
+            <input type="email" name="email" id="email" class="form-control form-control-solid form-control-lg" placeholder="Enter your email">
+            <div id="email_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Email -->
+
+        <!-- Button -->
+        <div class="d-grid">
+            <button class="btn btn-lg btn-primary" type="submit">Reset</button>
+        </div>
+        <!-- Button -->
+    </form>
+    <!-- Form -->
+
+    <!-- Text -->
+    <p class="text-center mb-0">
+        Already have an account?
+        <a href="{% url 'login' %}">Sign in.</a>
+    </p>
+    <!-- Text -->
+
+    <script>
+        document.getElementById('activation_form').addEventListener('submit', function(event) {
+            // Clear previous error messages
+            document.getElementById('email_validation').innerHTML = '';
+            document.getElementById('email').classList.remove('border-danger');
+
+            // Get form values
+            var email = document.getElementById('email').value;
+
+            // Validate email
+            if (email.trim() === ''){
+                document.getElementById('email_validation').innerHTML = 'email is required !';
+                document.getElementById('email').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Sign in
+{% endblock %}
+
+{% block heading_title %}
+    Sign in
+{% endblock %}
+
+{% block heading_text %}
+    Sign in to continue to Chat
+{% endblock %}
+
+{% block content %}
+    <!-- Form -->
+    <form class="mb-4" id="login_form" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        {% include 'base/messages.html' %}
+
+        <!-- Email -->
+        <div class="mb-4">
+            <label for="email" class="mb-2">Email</label>
+            <input type="email" name="email" id="email" class="form-control form-control-solid form-control-lg" placeholder="Enter your login or email">
+            <div id="email_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Email -->
+
+        <!-- Password -->
+        <div class="mb-4">
+            <label for="password" class="mb-2">Password</label>
+            <input type="password" name="password" id="password" class="form-control form-control-solid form-control-lg" placeholder="Enter your password">
+            <div id="password_validation" style="transition: .3s;" class="text-danger"></div>
+        </div>
+        <!-- Password -->
+
+        <!-- Remember -->
+        <div class="d-flex justify-content-between mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="remember-check" checked>
+                <label class="form-check-label" for="remember-check">
+                    Remember me
+                </label>
+            </div>
+            <a href="{% url 'forget_password' %}" class="no-underline">Reset password</a>
+        </div>
+        <!-- Remember -->
+
+        <!-- Button -->
+        <div class="d-grid">
+            <button class="btn btn-lg btn-primary" type="submit">Sign in</button>
+        </div>
+        <!-- Button -->
+    </form>
+    <!-- Form -->
+
+    <!-- Text -->
+    <p class="text-center mb-0">
+        Don't have an account?
+        <a href="{% url 'register' %}">Sign up.</a>
+    </p>
+    <!-- Text -->
+
+    <script>
+        document.getElementById('login_form').addEventListener('submit', function(event) {
+            // Clear previous error messages
+            document.getElementById('email_validation').innerHTML = '';
+            document.getElementById('password_validation').innerHTML = '';
+
+            document.getElementById('email').classList.remove('border-danger');
+            document.getElementById('password').classList.remove('border-danger');
+
+            // Get form values
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+
+            // Validate email
+            if (email.trim() === ''){
+                document.getElementById('email_validation').innerHTML = 'email is required !';
+                document.getElementById('email').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+
+            // Validate password
+            if (password.trim() === ''){
+                document.getElementById('password_validation').innerHTML = 'password is required !';
+                document.getElementById('password').classList.add('border-danger')
+                event.preventDefault() // Prevent form submission
+            }
+        });
+    </script>
+{% endblock %}

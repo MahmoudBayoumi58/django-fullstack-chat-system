@@ -1,0 +1,6 @@
+venv
+__pycache__
+.idea/
+media/chat-audio
+media/chat-images
+*.sqlite3
