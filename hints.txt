@@ -1,0 +1,6 @@
+to enable project run on local ip on browser (http instead https)
+we will use firefox browser:
+1- type in firefox url (about:config)
+2- set >> media.peerconnection.enabled to true
+3- set >> media.devices.insecure.enabled to true
+4- set >> media.getusermedia.insecure.enabled to true
