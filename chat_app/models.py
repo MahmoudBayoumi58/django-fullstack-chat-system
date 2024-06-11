@@ -22,6 +22,7 @@ class Message(models.Model):
     text = models.TextField(null=True, blank=True)
     audio = models.FileField(upload_to='chat-audio', null=True, blank=True)
     image = models.ImageField(upload_to='chat-images', null=True, blank=True)
+    is_msg_seen = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.chat)

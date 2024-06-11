@@ -1,5 +1,5 @@
 {% extends 'base/main.html' %}
-
+{% load custom_filters %}
 {% block title %}
     Chat Home
 {% endblock %}
@@ -71,6 +71,11 @@
                                                                         {{ chat.last_msg }}
                                                                     {% endif %}
                                                                 </div>
+                                                                {% with chat.id|unseen_messages:request.user.id as unseen_counts %}
+                                                                    {% if unseen_counts %}
+                                                                        <span class="badge rounded-pill bg-primary ms-2">{{unseen_counts}}</span>
+                                                                    {% endif %}
+                                                                {% endwith %}
                                                             </div>
                                                         </div>
                                                     {% else %}
@@ -87,6 +92,11 @@
                                                                         {{ chat.last_msg }}
                                                                     {% endif %}
                                                                 </div>
+                                                                {% with chat.id|unseen_messages:request.user.id as unseen_counts %}
+                                                                    {% if unseen_counts %}
+                                                                        <span class="badge rounded-pill bg-primary ms-2">{{unseen_counts}}</span>
+                                                                    {% endif %}
+                                                                {% endwith %}
                                                             </div>
                                                         </div>
                                                     {% endif %}

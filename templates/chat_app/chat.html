@@ -1,4 +1,5 @@
 {% extends 'base/main.html' %}
+{% load custom_filters %}
 
 {% block title %}
     Chat
@@ -71,6 +72,11 @@
                                                                         {{ chat.last_msg }}
                                                                     {% endif %}
                                                                 </div>
+                                                                {% with chat.id|unseen_messages:request.user.id as unseen_counts %}
+                                                                    {% if unseen_counts %}
+                                                                        <span id="seenFlagId" class="badge rounded-pill bg-primary ms-2">{{unseen_counts}}</span>
+                                                                    {% endif %}
+                                                                {% endwith %}
                                                             </div>
                                                         </div>
                                                     {% else %}
@@ -87,6 +93,11 @@
                                                                         {{ chat.last_msg }}
                                                                     {% endif %}
                                                                 </div>
+                                                                {% with chat.id|unseen_messages:request.user.id as unseen_counts %}
+                                                                    {% if unseen_counts %}
+                                                                        <span id="seenFlagId" class="badge rounded-pill bg-primary ms-2">{{unseen_counts}}</span>
+                                                                    {% endif %}
+                                                                {% endwith %}
                                                             </div>
                                                         </div>
                                                     {% endif %}
@@ -157,6 +168,14 @@
                             </button>
                         </li>
                         <!-- Search Button -->
+
+                        <!-- Video Button -->
+                        <li class="list-inline-item d-none d-sm-inline-block">
+                            <a href="{% url 'video_view' chat.uuid %}" class="chat-info-toggle btn btn-icon btn-base" title="Video call">
+                                <i class="ri-vidicon-line"></i>
+                            </a>
+                        </li>
+                        <!-- Video Button -->
 
                         <!-- Chat Info Button -->
                         <li class="list-inline-item d-none d-sm-inline-block">
@@ -253,33 +272,30 @@
                                     </div>
                                     <!-- Shared Photos -->
                                 {% elif message.text %}
-                                    <span>{{message.text}}</span>
+                                    <span data-id="{{message.id}}">{{message.text}}</span>
                                 {% else %}
                                     <audio controls src="{{ message.audio.url }}"></audio>
                                 {% endif %}
                             </div>
-                            <div class="dropdown align-self-center">
-                                <button class="btn btn-icon btn-base btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="ri-more-2-fill"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">Edit
-                                            <i class="ri-edit-line"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">Share
-                                            <i class="ri-share-line"></i>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">Delete
-                                            <i class="ri-delete-bin-line"></i>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
+                            {% if message.sender == request.user %}
+                                <div class="dropdown align-self-center">
+                                    <button class="btn btn-icon btn-base btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center justify-content-between edit_message" data-msg="{{message.text}}" data-msg-id="{{message.id}}" href="#">Edit
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center justify-content-between delete_message" data-msg-id="{{message.id}}" href="#">Delete
+                                                <i class="ri-delete-bin-line"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="message-info">
@@ -338,7 +354,7 @@
                 <div class="col-auto">
                     <ul class="list-inline d-flex align-items-center mb-0">
                         <li class="list-inline-item">
-                            <button type="submit" id="send-message" class="btn btn-icon btn-primary btn-lg rounded-circle">
+                            <button type="submit" isNewMess="true" id="send-message" class="btn btn-icon btn-primary btn-lg rounded-circle">
                                 <i class="ri-send-plane-fill"></i>
                             </button>
                         </li>
@@ -389,118 +405,148 @@
             + '/ws/chat/{{chat.uuid}}/'
         );
 
+        socket.onopen = () => {
+            const seenSpan = document.getElementById('seenFlagId');
+            if (seenSpan) {
+                seenSpan.remove();
+            }
+        }
+
         function createNewMessage(data) {
-            // Create the main message div and add classes based on the sender
-            const messageDiv = document.createElement('div');
-            messageDiv.setAttribute('id', data.id);
-            messageDiv.classList.add('message');
-            if (data.sender !== '{{friend.get_full_name}}') { 
-                messageDiv.classList.add('self');
-            }
-
-            // Create the message wrap div
-            const messageWrap = document.createElement('div');
-            messageWrap.classList.add('message-wrap');
-
-            // Create the message item div
-            const messageItem = document.createElement('div');
-            messageItem.classList.add('message-item');
-
-            // Create the message content div
-            const messageContent = document.createElement('div');
-            messageContent.classList.add('message-content');
-
+            
             // Check the type of message and create corresponding elements
-            if (data.image) {
-                // Shared Photos
-                const h6 = document.createElement('h6');
-                h6.textContent = 'Shared Photos:';
-                messageContent.appendChild(h6);
+            if (data.action == 'createMessage') {
+                // Create the main message div and add classes based on the sender
+                const messageDiv = document.createElement('div');
+                messageDiv.setAttribute('id', data.id);
+                messageDiv.classList.add('message');
+                if (data.sender !== '{{friend.get_full_name}}') { 
+                    messageDiv.classList.add('self');
+                }
 
-                const sharedImageList = document.createElement('div');
-                sharedImageList.classList.add('shared-image-list', 'row', 'align-items-center', 'g-3');
+                // Create the message wrap div
+                const messageWrap = document.createElement('div');
+                messageWrap.classList.add('message-wrap');
 
-                const colDiv = document.createElement('div');
-                colDiv.classList.add('col');
+                // Create the message item div
+                const messageItem = document.createElement('div');
+                messageItem.classList.add('message-item');
 
-                const sharedImageLink = document.createElement('a');
-                sharedImageLink.classList.add('shared-image');
-                sharedImageLink.href = data.image; // Set the URL
+                // Create the message content div
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
 
-                const imgElement = document.createElement('img');
-                imgElement.classList.add('img-fluid', 'rounded-2');
-                imgElement.src = data.image; // Set the URL
-                imgElement.alt = 'preview';
-                imgElement.setAttribute('data-action', 'zoom');
+                if (data.image) {
+                    // Shared Photos
+                    const h6 = document.createElement('h6');
+                    h6.textContent = 'Shared Photos:';
+                    messageContent.appendChild(h6);
 
-                // Append elements for image
-                sharedImageLink.appendChild(imgElement);
-                colDiv.appendChild(sharedImageLink);
-                sharedImageList.appendChild(colDiv);
-                messageContent.appendChild(sharedImageList);
-            } else if (data.message) {
-                // Text message
-                const messageSpan = document.createElement('span');
-                messageSpan.setAttribute('id', data.id)
-                messageSpan.textContent = data.message;
-                messageContent.appendChild(messageSpan);
-            } else if (data.audio) {
-                // Audio message
-                const audioElement = document.createElement('audio');
-                audioElement.controls = true;
-                audioElement.src = data.audio; // Set the URL
-                messageContent.appendChild(audioElement);
+                    const sharedImageList = document.createElement('div');
+                    sharedImageList.classList.add('shared-image-list', 'row', 'align-items-center', 'g-3');
+
+                    const colDiv = document.createElement('div');
+                    colDiv.classList.add('col');
+
+                    const sharedImageLink = document.createElement('a');
+                    sharedImageLink.classList.add('shared-image');
+                    sharedImageLink.href = data.image; // Set the URL
+
+                    const imgElement = document.createElement('img');
+                    imgElement.classList.add('img-fluid', 'rounded-2');
+                    imgElement.src = data.image; // Set the URL
+                    imgElement.alt = 'preview';
+                    imgElement.setAttribute('data-action', 'zoom');
+
+                    // Append elements for image
+                    sharedImageLink.appendChild(imgElement);
+                    colDiv.appendChild(sharedImageLink);
+                    sharedImageList.appendChild(colDiv);
+                    messageContent.appendChild(sharedImageList);
+                } 
+                else if (data.message) {
+                    // Text message
+                    const messageSpan = document.createElement('span');
+                    messageSpan.setAttribute('id', data.id)
+                    messageSpan.textContent = data.message;
+                    messageContent.appendChild(messageSpan);
+
+                } 
+                else if (data.audio) {
+                    // Audio message
+                    const audioElement = document.createElement('audio');
+                    audioElement.controls = true;
+                    audioElement.src = data.audio; // Set the URL
+                    messageContent.appendChild(audioElement);
+                }
+
+                // Append message content to message item
+                messageItem.appendChild(messageContent);
+                
+                // Create the message actions div
+                if (data.sender == '{{request.user.get_full_name}}' ) {
+                    const messageAction = createMessageActionsDropdown(data.id);
+                    // Append message actions dropdown to message item
+                    messageItem.appendChild(messageAction);
+                }
+
+                // Append message item to message wrap
+                messageWrap.appendChild(messageItem);
+
+                // Create the message info div
+                const messageInfo = document.createElement('div');
+                messageInfo.classList.add('message-info');
+
+                // Create the avatar div
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('avatar', 'avatar-sm');
+
+                // Create the avatar label span
+                const avatarLabel = document.createElement('span');
+                avatarLabel.classList.add('avatar-label', 'bg-soft-primary', 'text-primary', 'fs-6');
+                avatarLabel.textContent = data.sender_short_name; // Replace with actual short name
+                avatarDiv.appendChild(avatarLabel);
+
+                // Append avatar div to message info
+                messageInfo.appendChild(avatarDiv);
+
+                // Create the sender info div
+                const senderInfoDiv = document.createElement('div');
+
+                // Create the sender full name h6
+                const senderFullName = document.createElement('h6');
+                senderFullName.classList.add('mb-0');
+                senderFullName.textContent = data.sender; // Replace with actual full name
+                senderInfoDiv.appendChild(senderFullName);
+
+                // Create the timestamp small
+                const timestamp = document.createElement('small');
+                timestamp.classList.add('text-muted');
+                timestamp.textContent = moment(data.created_at).startOf().fromNow(); // Replace with actual timestamp
+                senderInfoDiv.appendChild(timestamp);
+
+                // Append sender info div to message info
+                messageInfo.appendChild(senderInfoDiv);
+
+                // Append message info to message div
+                messageDiv.appendChild(messageWrap);
+                messageDiv.appendChild(messageInfo);
+
+                // Append the message div to your chat container
+                const chatContainer = document.getElementById('message-id'); // Adjust selector as needed
+                chatContainer.appendChild(messageDiv);
+
             }
-
-            // Append message content to message item
-            messageItem.appendChild(messageContent);
-
-            // Append message item to message wrap
-            messageWrap.appendChild(messageItem);
-
-            // Create the message info div
-            const messageInfo = document.createElement('div');
-            messageInfo.classList.add('message-info');
-
-            // Create the avatar div
-            const avatarDiv = document.createElement('div');
-            avatarDiv.classList.add('avatar', 'avatar-sm');
-
-            // Create the avatar label span
-            const avatarLabel = document.createElement('span');
-            avatarLabel.classList.add('avatar-label', 'bg-soft-primary', 'text-primary', 'fs-6');
-            avatarLabel.textContent = data.sender_short_name; // Replace with actual short name
-            avatarDiv.appendChild(avatarLabel);
-
-            // Append avatar div to message info
-            messageInfo.appendChild(avatarDiv);
-
-            // Create the sender info div
-            const senderInfoDiv = document.createElement('div');
-
-            // Create the sender full name h6
-            const senderFullName = document.createElement('h6');
-            senderFullName.classList.add('mb-0');
-            senderFullName.textContent = data.sender; // Replace with actual full name
-            senderInfoDiv.appendChild(senderFullName);
-
-            // Create the timestamp small
-            const timestamp = document.createElement('small');
-            timestamp.classList.add('text-muted');
-            timestamp.textContent = moment(data.created_at).startOf().fromNow(); // Replace with actual timestamp
-            senderInfoDiv.appendChild(timestamp);
-
-            // Append sender info div to message info
-            messageInfo.appendChild(senderInfoDiv);
-
-            // Append message info to message div
-            messageDiv.appendChild(messageWrap);
-            messageDiv.appendChild(messageInfo);
-
-            // Append the message div to your chat container
-            const chatContainer = document.getElementById('message-id'); // Adjust selector as needed
-            chatContainer.appendChild(messageDiv);
-
+            else if (data.action == 'editMessage') {
+                const messageSpan = document.querySelector(`span[data-id="${data.id}"]`);
+                messageSpan.textContent = data.message;
+            }
+            else {
+                debugger;
+                const messageSpan = document.getElementById(data.message_id);
+                messageSpan.remove();
+            }
+            
             // Scroll to the bottom (if needed)
             // You can use your existing logic for scrolling to the bottom
         };
@@ -508,7 +554,6 @@
         // WebSocket message handler
         socket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-            console.log(data);
             // Create and display the new message
             createNewMessage(data);
             window.location.href = `#${data.id}`;
@@ -517,22 +562,122 @@
         var SendTextMessageBtn = document.getElementById('send-message');
         var TextMessage = document.getElementById('text-msg-input')
 
+        var editButtons = document.getElementsByClassName('edit_message');
+        var isNewMess = 'true'
+        var editMessageId = null;
+        var editButton = null;
+
+
         SendTextMessageBtn.addEventListener('click',()=>{
+            debugger;
             var msg = TextMessage.value;
-            socket.send(JSON.stringify({
-                'message': msg
-            }));
+            if (isNewMess == 'true'){
+                socket.send(JSON.stringify({
+                    'action': 'createMessage',
+                    'message': msg
+                }));
+            }
+            else {
+                // set data-msg to new edited message
+                editButton.setAttribute('data-msg', msg);
+                socket.send(JSON.stringify({
+                    'action': 'editMessage',
+                    'message': msg,
+                    'message_id': editMessageId
+                }))
+            }
 
             TextMessage.value = '';
+            isNewMess = 'true';
+            editButton = null;
             TextMessage.focus()
 
         });
+
+        // edit Message
+        for(let i = 0; i < editButtons.length; i++){
+            editButtons[i].addEventListener('click', function () {
+                isNewMess = 'false'
+                editMessageId = this.getAttribute('data-msg-id');
+                TextMessage.value = this.getAttribute('data-msg');
+                editButton = editButtons[i];
+            });
+        }
+
+        // delete Message
+        deleteButtons = document.getElementsByClassName('delete_message');
+        for(let i = 0; i < deleteButtons.length; i++ ){
+            deleteButtons[i].addEventListener('click', function () {
+                let id = this.getAttribute('data-msg-id');
+                socket.send(JSON.stringify({
+                    'action': 'deleteMessage',
+                    'message_id': id
+                }))
+            });
+        }
+        // console.log('edit_message', editButtons)
 
         document.getElementById('text-msg-input').onkeyup = function(e) {
             if (e.key === 'Enter') {  // enter, return
                 SendTextMessageBtn.click()
             }
         };
+
+        function createMessageActionsDropdown(messageId) {
+            // Create the dropdown div
+            const dropdownDiv = document.createElement('div');
+            dropdownDiv.classList.add('dropdown', 'align-self-center');
+
+            // Create the button element
+            const button = document.createElement('button');
+            button.classList.add('btn', 'btn-icon', 'btn-base', 'btn-sm');
+            button.setAttribute('type', 'button');
+            button.setAttribute('data-bs-toggle', 'dropdown');
+            button.setAttribute('aria-expanded', 'false');
+
+            // Create the icon element
+            const icon = document.createElement('i');
+            icon.classList.add('ri-more-2-fill');
+            button.appendChild(icon);
+
+            // Create the dropdown menu ul element
+            const dropdownMenu = document.createElement('ul');
+            dropdownMenu.classList.add('dropdown-menu');
+
+            // Create the Edit li element
+            const editLi = document.createElement('li');
+            const editA = document.createElement('a');
+            editA.classList.add('dropdown-item', 'd-flex', 'align-items-center', 'justify-content-between', 'edit_message');
+            editA.setAttribute('data-msg-id', messageId);
+            editA.setAttribute('href', '#');
+            editA.textContent = 'Edit';
+            const editIcon = document.createElement('i');
+            editIcon.classList.add('ri-edit-line');
+            editA.appendChild(editIcon);
+            editLi.appendChild(editA);
+
+            // Create the Delete li element
+            const deleteLi = document.createElement('li');
+            const deleteA = document.createElement('a');
+            deleteA.classList.add('dropdown-item', 'd-flex', 'align-items-center', 'justify-content-between', 'delete_message');
+            deleteA.setAttribute('id', messageId);
+            deleteA.setAttribute('href', '#');
+            deleteA.textContent = 'Delete';
+            const deleteIcon = document.createElement('i');
+            deleteIcon.classList.add('ri-delete-bin-line');
+            deleteA.appendChild(deleteIcon);
+            deleteLi.appendChild(deleteA);
+
+            // Append li elements to dropdown menu
+            dropdownMenu.appendChild(editLi);
+            dropdownMenu.appendChild(deleteLi);
+
+            // Append button and dropdown menu to dropdown div
+            dropdownDiv.appendChild(button);
+            dropdownDiv.appendChild(dropdownMenu);
+
+            return dropdownDiv;
+        }
 
 
     </script>
@@ -588,7 +733,7 @@
                 const media_recorder = new MediaRecorder(stream);
 
                 rec_btn.onclick = function(){
-                    console.log(media_recorder.state)
+                    // console.log(media_recorder.state)
                     media_recorder.start();
                     rec_btn.style.display = 'none';
                     SendRecBtn.style.display = 'none';

@@ -1,0 +1,244 @@
+{% extends 'base/call-base.html' %}
+
+{% block title %}
+    Video
+{% endblock %}
+
+{% block heading_title %}
+    Video Call
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h4 class="text-primary fw-bold">{{ request.user.get_full_name }}</h4>
+    <div class="row p-1">
+        <div class="col-6">
+            <video id="localVideo" autoplay playsinline class="border border-primary"></video>
+        </div>
+        <div class="col-6">          
+            <video id="remoteVideo" autoplay playsinline class="border border-danger"></video>
+        </div>
+    </div>
+    
+    <div id="controls">
+        <button type="button" class="btn btn-danger ri-video-on-line" id="callButton"></button>
+        <button class="btn btn-danger ri-mic-line" id="micButton"></button>
+        <button class="btn btn-danger ri-phone-line" id="hangupButton"></button>
+    </div>
+</div>
+
+<script>
+    /* Get variables from django */
+    debugger;
+    const username = '{{request.user.get_full_name}}';
+    let chatUUID = '{{chat_uuid}}';
+
+    const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/call/'
+        + chatUUID
+        + '/'
+    );
+    //connect
+    chatSocket.onopen = function (e) {
+        console.info("Connected to Chat Socket");
+    };
+
+    //disconnect
+    chatSocket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    /* Video Call Script */
+    let pc;
+    let localStream;
+    let remoteStream;
+
+    let localVideo = document.getElementById('localVideo');
+    let remoteVideo = document.getElementById('remoteVideo');
+    let hangupButton = document.getElementById('hangupButton');
+    let micButton = document.getElementById('micButton');
+    let callButton = document.getElementById('callButton');
+
+    // Add event listeners to buttons
+    hangupButton.addEventListener('click', hangupCall);
+    micButton.addEventListener('click', toggleMic);
+    callButton.addEventListener('click', toggleVideo);
+
+    const configuration = {
+        iceServers: [
+            {
+                urls: 'stun:stun1.l.google.com:19302'
+            }
+        ]
+    };
+
+    // receive
+    let caller = '{{ call.caller.get_full_name }}';
+    chatSocket.onmessage = async function (e) {
+        debugger;
+        if (username == caller) {
+            // Event listener for ICE candidates
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    //console.log(event.candidate);
+                    // Send the ICE candidate to the remote user
+                    chatSocket.send(JSON.stringify({
+                        'action': 'videoCall',
+                        'type': 'candidate',
+                        'candidate': event.candidate,
+                        'from':'caller'
+                    }));
+                }
+            };
+
+            let data = JSON.parse(e.data);
+            if (data['type'] == 'answer' ) {
+                const answer = new RTCSessionDescription(data);
+                await pc.setRemoteDescription(answer);
+            }
+            else if (data['candidate']  && data['from'] == 'callee') {
+                const candidate = new RTCIceCandidate(data['candidate']);   
+                await pc.addIceCandidate(candidate);
+            }
+
+        }
+        else {
+            // Event listener for ICE candidates
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    // Send the ICE candidate to the remote user
+                    chatSocket.send(JSON.stringify({
+                        'action': 'videoCall',
+                        'type': 'candidate',
+                        'candidate': event.candidate,
+                        'from':'callee'
+                    }));
+                }
+            };
+
+            let data = JSON.parse(e.data);
+            if (data['type'] == 'offer') {
+                const offer = new RTCSessionDescription(data);
+                await pc.setRemoteDescription(offer);
+
+                // Create answer after setting remote description
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                // Send answer to remote user
+                chatSocket.send(JSON.stringify({
+                    'action': 'videoCall',
+                    'type': 'answer',
+                    'answer': pc.localDescription,
+                    'from':'callee'
+                }));
+            }
+            else if (data['candidate'] && data['from'] == 'caller') {
+                const candidate = new RTCIceCandidate(data['candidate']);
+                await pc.addIceCandidate(candidate);
+            }
+        }
+    };
+
+    async function startCall() {
+        let stream = null;
+        try {
+            let constraints = { video: true, audio: true };
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            localStream = stream;
+            localVideo.srcObject = localStream;
+
+            // Create a new RTCPeerConnection object
+            pc = new RTCPeerConnection();
+
+            // Add the local media stream to the RTCPeerConnection
+            localStream.getTracks().forEach(track => {
+                pc.addTrack(track, localStream);
+            });
+
+            if (username == caller){
+                // Create an offer and set it as the local description
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                // Send the offer to the remote user
+                await chatSocket.send(JSON.stringify({
+                    'action': 'videoCall',
+                    'type': 'offer',
+                    'offer': pc.localDescription,
+                    'from': 'caller'
+                }));
+            }
+
+            pc.oniceconnectionstatechange = () => {
+            console.log("ICE connection state: " + pc.iceConnectionState);
+            if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+                console.log("Remote stream is active");
+                // You can perform additional actions here, such as displaying a notification or enabling certain features.
+            }
+            };
+
+            // Event listener for remote track media
+            pc.ontrack = event => {
+                console.log("Track added...");
+                if (!remoteVideo.srcObject) {
+                    remoteStream = event.streams[0];
+                    remoteVideo.srcObject = remoteStream;
+                }
+            }
+            
+
+        } catch (err) {
+            alert(err + "Error Unable to access your camera and microphone.");
+        }
+
+    }
+
+    // Function to hang up the call
+    async function hangupCall(e) {
+        // Close the peer connection
+        await pc.close();
+        // Stop local stream
+        localStream.getTracks().forEach(track => track.stop());
+
+        if (remoteStream) {
+            remoteStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Clear video streams
+        localVideo.srcObject = null;
+        remoteVideo.srcObject = null;
+
+        console.log("connection state", pc.connectionState);
+
+        chatSocket.send(JSON.stringify({
+            'action': 'videoCall',
+            'type': 'close',
+            'call': '{{call.chat}}'
+        }));
+    };
+
+    function toggleMic(e) {
+        if (localStream.getAudioTracks()[0].enabled) {
+            localStream.getAudioTracks()[0].enabled = false;
+            e.target.classList.replace('ri-mic-line', 'ri-mic-off-line');
+        } else {
+            localStream.getAudioTracks()[0].enabled = true;
+            e.target.classList.replace('ri-mic-off-line', 'ri-mic-line');
+        }
+    }
+
+    function toggleVideo(e) {
+        if (localStream.getVideoTracks()[0].enabled) {
+            localStream.getVideoTracks()[0].enabled = false;
+            e.target.classList.replace('ri-video-on-line', 'ri-video-off-line');
+        } else {
+            localStream.getVideoTracks()[0].enabled = true;
+            e.target.classList.replace('ri-video-off-line', 'ri-video-on-line');
+        }
+    }
+
+    startCall();
+</script>
+{% endblock %}

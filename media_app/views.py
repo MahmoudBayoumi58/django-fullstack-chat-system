@@ -26,6 +26,7 @@ def send_image(request, chat_uuid):
     data['id'] = message.id
     data['sender'] = sender.get_full_name()
     data['sender_short_name'] = sender.get_short_name()
+    data['action'] = 'createMessage'
     data['created_at'] = f'{message.created_at}'
     data['image'] = message.image.url
 
@@ -61,6 +62,7 @@ def send_audio(request, chat_uuid):
     data['id'] = message.id
     data['sender'] = sender.get_full_name()
     data['sender_short_name'] = sender.get_short_name()
+    data['action'] = 'createMessage'
     data['created_at'] = f'{message.created_at}'
     data['audio'] = message.audio.url
 
