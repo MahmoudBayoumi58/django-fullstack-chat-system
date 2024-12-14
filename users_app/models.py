@@ -64,7 +64,7 @@ class PasswordReset(models.Model):
 
 @receiver(post_save, sender=Users)
 def send_activation_code(created, instance, **kwargs):
-    if created:
+    if created and not instance.is_superuser:
         activation = Activation(user=instance)
         activation.save()
         activation_code = activation.activation_code
